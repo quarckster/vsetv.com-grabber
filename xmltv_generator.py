@@ -42,8 +42,9 @@ class VsetvGrabber:
         d = date.today() + timedelta(days=1)
         dt = datetime.combine(d, t)
         for i in self.correct_starttime():
-            i[1:].append(dt)
-            new_time.append(i)
+            i = i[1:]
+            i.append(dt)
+            new_time.append(dt)
         return new_time
      
     def get_programmes_titles(self):
