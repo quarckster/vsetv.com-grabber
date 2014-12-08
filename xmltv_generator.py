@@ -24,7 +24,7 @@ class VsetvGrabber:
         return dt
      
     def make_date(self):
-        return [map(lambda x: self.convert_date(x), p) for p in self.get_starttime()]
+        return [map(self.convert_date, p) for p in self.get_starttime()]
      
     def correct_starttime(self):
         wrong_datetime = self.make_date()
@@ -42,9 +42,9 @@ class VsetvGrabber:
         d = date.today() + timedelta(days=1)
         dt = datetime.combine(d, t)
         for i in self.correct_starttime():
-            i = i[1:]
+            del i[0]
             i.append(dt)
-            new_time.append(dt)
+            new_time.append(i)
         return new_time
      
     def get_programmes_titles(self):
