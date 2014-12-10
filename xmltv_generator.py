@@ -13,8 +13,8 @@ class VsetvGrabber:
         self.g.setup(cookies={"cll": "your_cookie", "cp": "your_cookie"})
         self.g.go('http://www.vsetv.com/schedule_package_personal_day_' +
                   str(date.today()) + '_nsc_1.html')
-        self.amount_channels = range(
-            len(self.g.doc.select('//div[@id="schedule_container"]')))
+        self.amount_channels = range(len(self.g.doc.select(
+            '//div[@id="schedule_container"]')))
         self.main_selector = self.g.doc.select(
             '//div[@id="schedule_container"]')
 
@@ -60,8 +60,8 @@ class VsetvGrabber:
         return new_time
 
     def get_programmes_titles(self):
-        return [self.main_selector[i].select(
-                './div[@class="prname2" or @class="pastprname2"]')
+        return [self.main_selector[i]
+                .select('./div[@class="prname2" or @class="pastprname2"]')
                 .text_list() for i in self.amount_channels]
 
     def time_to_string(self, datetime_object):
@@ -71,10 +71,11 @@ class VsetvGrabber:
         final_dict = []
         m = 1
         for i, j, k in zip(self.get_programmes_titles(),
-                           self.correct_starttime(), self.get_stoptime()):
+                           self.correct_starttime(),
+                           self.get_stoptime()):
             for a, b, c in zip(i, j, k):
-                final_dict.append({'channel': str(m), 'start':
-                                   self.time_to_string(b),
+                final_dict.append({'channel': str(m),
+                                   'start': self.time_to_string(b),
                                    'stop': self.time_to_string(c),
                                    'title': [(a, u'ru')]})
             m += 1
