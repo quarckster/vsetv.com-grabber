@@ -19,9 +19,9 @@ class VsetvGrabber:
             '//div[@id="schedule_container"]')
 
     def get_channels_titles_dict(self):
-        return [{'display-name': [(elem, u'ru')], 'id': str(i + 1)}
+        return [{'display-name': [(elem, u'ru')], 'id': str(i)}
                 for i, elem in enumerate(
-                self.g.doc.select('//td[@class="channeltitle"]').text_list())]
+                self.g.doc.select('//td[@class="channeltitle"]').text_list(), 1)]
 
     def get_starttime(self):
         return [self.main_selector[i].select(
@@ -39,11 +39,11 @@ class VsetvGrabber:
     def correct_starttime(self):
         starttime_lists = self.make_date()
         for starttime in starttime_lists:
-            for i, this_date in enumerate(starttime):
+            for i, this_date in enumerate(starttime, 1):
                 try:
-                    next_date = starttime[i + 1]
+                    next_date = starttime[i]
                     if this_date > next_date:
-                        starttime[i + 1] += timedelta(days=1)
+                        starttime[i] += timedelta(days=1)
                 except IndexError:
                     continue
         return starttime_lists
