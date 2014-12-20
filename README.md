@@ -1,7 +1,7 @@
 vsetv.com-grabber
 =================
 
-#English
+##English
 A tv guide grabber from vsetv.com. Script grabs tv guide in xmltv for one day.
 
 ##Dependecies
@@ -12,9 +12,9 @@ A tv guide grabber from vsetv.com. Script grabs tv guide in xmltv for one day.
 ##Usage
 You should have an account on vsetv.com if you want your own tv guide.
 This script use cookies for login, in particulary fields "cli" и "cp".
-Just copy these values in line self.g.setup(cookies={"cll":"your_cookie", "cp":"your_cookie"})`.
+Just copy these values in line `self.g.setup(cookies={"cll":"your_cookie", "cp":"your_cookie"})`.
 
-#Русский
+##Русский
 Граббер сайта vsetv.com. Извлекает программу телепередач на один день в формате xmltv.
 
 ##Зависимости
