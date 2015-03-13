@@ -13,10 +13,9 @@ class VsetvGrabber:
         self.g.setup(cookies={"cll": "your_cookie", "cp": "your_cookie"})
         self.g.go('http://www.vsetv.com/schedule_package_personal_day_' +
                   str(date.today()) + '_nsc_1.html')
-        self.amount_channels = range(len(self.g.doc.select(
-            '//div[@id="schedule_container"]')))
         self.main_selector = self.g.doc.select(
             '//div[@id="schedule_container"]')
+        self.amount_channels = range(len(self.main_selector))
 
     def get_channels_titles_dict(self):
         return [{'display-name': [(elem, u'ru')], 'id': str(i)}
@@ -29,7 +28,7 @@ class VsetvGrabber:
                 .text_list() for i in self.amount_channels]
 
     def convert_date(self, start_time):
-        dt = str(date.today()) + " " + str(start_time)
+        dt = '%s %s' % (date.today(), start_time)
         dt = datetime.strptime(dt, "%Y-%m-%d %H:%M")
         return dt
 
@@ -87,7 +86,7 @@ class VsetvGrabber:
             w.addChannel(i)
         for i in self.make_dict():
             w.addProgramme(i)
-        w.write(file)
+        w.write(file, True)
 
 if __name__ == '__main__':
     x = VsetvGrabber()
