@@ -88,16 +88,14 @@ def time_to_string(datetime_object):
 
 def make_dict():
     final_dict = []
-    m = 1
-    for i, j, k in zip(get_programmes_titles(),
-                       correct_starttime(),
-                       get_stoptime()):
+    for n, (i, j, k) in enumerate(zip(get_programmes_titles(),
+                                      correct_starttime(),
+                                      get_stoptime())):
         for a, b, c in zip(i, j, k):
-            final_dict.append({"channel": str(m),
+            final_dict.append({"channel": str(n),
                                "start": time_to_string(b),
                                "stop": time_to_string(c),
                                "title": [(a, u"ru")]})
-        m += 1
     return final_dict
 
 
