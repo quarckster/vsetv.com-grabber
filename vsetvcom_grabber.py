@@ -90,7 +90,7 @@ def make_dict():
     final_dict = []
     for n, (i, j, k) in enumerate(zip(get_programmes_titles(),
                                       correct_starttime(),
-                                      get_stoptime())):
+                                      get_stoptime()), 1):
         for a, b, c in zip(i, j, k):
             final_dict.append({"channel": str(n),
                                "start": time_to_string(b),
