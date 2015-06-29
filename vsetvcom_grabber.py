@@ -21,7 +21,8 @@ def parse_args():
     return args.u, args.p, args.o
 
 g = Grab()
-g.setup(post={"inlogin": parse_args()[0], "inpassword": parse_args()[1]})
+g.setup(post={"inlogin": parse_args()[0], "inpassword": parse_args()[1]},
+        timeout=60000)
 g.go("http://www.vsetv.com/login.php")
 g.go("http://www.vsetv.com/schedule_package_personal_day_%s_nsc_1.html" %
      date.today())
@@ -41,18 +42,10 @@ def get_starttime():
             .text_list() for i in amount_channels]
 
 
-def convert_date(start_time):
-    dt = "%s %s" % (date.today(), start_time)
-    dt = datetime.strptime(dt, "%Y-%m-%d %H:%M")
-    return dt
-
-
-def make_date():
-    return [map(convert_date, p) for p in get_starttime()]
-
-
-def correct_starttime():
-    starttime_lists = make_date()
+def correct_starttime():    
+    dt = lambda st: datetime.combine(date.today(), time(int(st.split(":")[0]),
+                                                        int(st.split(":")[1])))
+    starttime_lists = [list(map(dt, p)) for p in get_starttime()]
     for starttime in starttime_lists:
         for i, this_date in enumerate(starttime, 1):
             try:
@@ -65,25 +58,21 @@ def correct_starttime():
 
 
 def get_stoptime():
-    new_time = []
+    stoptime_lists = []
     t = time(5, 0)
     d = date.today() + timedelta(days=1)
     dt = datetime.combine(d, t)
     for i in correct_starttime():
         del i[0]
         i.append(dt)
-        new_time.append(i)
-    return new_time
+        stoptime_lists.append(i)
+    return stoptime_lists
 
 
 def get_programmes_titles():
     return [main_selector[i]
             .select("./div[@class=\"prname2\" or @class=\"pastprname2\"]")
             .text_list() for i in amount_channels]
-
-
-def time_to_string(datetime_object):
-    return datetime_object.strftime("%Y%m%d%H%M%S")
 
 
 def make_dict():
@@ -93,8 +82,8 @@ def make_dict():
                                       get_stoptime()), 1):
         for a, b, c in zip(i, j, k):
             final_dict.append({"channel": str(n),
-                               "start": time_to_string(b),
-                               "stop": time_to_string(c),
+                               "start": b.strftime("%Y%m%d%H%M%S"),
+                               "stop": c.strftime("%Y%m%d%H%M%S"),
                                "title": [(a, u"ru")]})
     return final_dict
 
