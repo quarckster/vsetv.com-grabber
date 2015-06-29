@@ -17,6 +17,7 @@ The script created as cli utility. It has four arguments:
 `-u`          vsetv.com user  
 `-p`          vsetv.com password  
 `-o`          output file, if omitted the script saves result in tv_guide.xml
+`--stdout`	  output to stdout
 
 
 ##Русский
@@ -35,3 +36,4 @@ The script created as cli utility. It has four arguments:
 `-u`          vsetv.com логин  
 `-p`          vsetv.com пароль  
 `-o`          выходной файл, если не указан, то скрипт сохраняет в файл с именем tv_guide.xml
+`--stdout`	  итоговый xml отправить на стандартный вывод

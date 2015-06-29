@@ -8,17 +8,21 @@ from datetime import datetime, date, time, timedelta
 def parse_args():
     """Parse script parameters and return its values."""
     parser = argparse.ArgumentParser(description="vsetv.com grabber.")
+    group = parser.add_mutually_exclusive_group()
     parser.add_argument("-u",
                         required=True,
                         help="user")
     parser.add_argument("-p",
                         required=True,
                         help="password")
-    parser.add_argument("-o",
+    group.add_argument("-o",
                         default="tv_guide.xml",
                         help="output file")
+    group.add_argument("--stdout",
+                        action="store_true",
+                        help="output to stdout")
     args = parser.parse_args()
-    return args.u, args.p, args.o
+    return args.u, args.p, args.o, args.stdout
 
 g = Grab()
 g.setup(post={"inlogin": parse_args()[0], "inpassword": parse_args()[1]},
@@ -97,4 +101,11 @@ def write(file):
     w.write(file)
 
 if __name__ == "__main__":
-    write(parse_args()[2])
+    if parse_args()[3]:
+        import sys
+        if sys.version_info.major == 3:
+            write(sys.stdout.buffer)
+        elif sys.version_info.major == 2:
+            write(sys.stdout)
+    else:
+        write(parse_args()[2])
