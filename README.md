@@ -5,7 +5,7 @@ vsetv.com-grabber
 A tv guide grabber from vsetv.com. Script grabs tv guide in xmltv for one day.
 
 ##Dependecies
-* python2.7
+* python2.7 and above
 * Grab (http://grablib.org/)
 * xmltv (https://bitbucket.org/jfunk/python-xmltv)
 
@@ -23,7 +23,7 @@ The script created as cli utility. It has four arguments:
 Граббер сайта vsetv.com. Извлекает программу телепередач на один день в формате xmltv.
 
 ##Зависимости
-* python2.7
+* python2.7 и выше
 * Grab (http://grablib.org/)
 * xmltv (https://bitbucket.org/jfunk/python-xmltv)
 
