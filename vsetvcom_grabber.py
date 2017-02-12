@@ -46,11 +46,11 @@ def grab_pages():
 
 def get_channels_titles_dict():
     g.go(urljoin(BASE_URL, EPG_URL.format(date.today())))
-    return [
+    return (
         {"display-name": [(elem, u"ru")], "id": str(i)}
         for i, elem in enumerate(
             g.doc.select(".//td[@class='channeltitle']").text_list(), 1)
-    ]
+    )
 
 
 def deobfuscate_start_time(div):
@@ -69,24 +69,19 @@ def deobfuscate_start_time(div):
 
 
 def get_starttime(main_selector, amount_channels):
-    return [
+    return (
         list(map(
             deobfuscate_start_time,
             main_selector[i].select(
                 "./div[@class='time' or @class='onair' or @class='pasttime']"
             ).selector_list
         )) for i in amount_channels
-    ]
+    )
 
 
 def parse_start_time_string(start_time_string, date_=None):
-    return datetime.combine(
-        date_,
-        time(
-            int(start_time_string.split(":")[0]),
-            int(start_time_string.split(":")[1])
-        )
-    )
+    hour, minute = [int(string) for string in start_time_string.split(":")]
+    return datetime.combine(date_, time(hour, minute))
 
 
 def correct_starttime(date_, main_selector, amount_channels):
@@ -106,28 +101,25 @@ def correct_starttime(date_, main_selector, amount_channels):
 
 
 def get_stoptime(date_, start_time_lists, transitions):
-    stoptime_lists = []
     if not transitions:
         d = date_ + timedelta(days=1)
         t = time(5, 0)
-        transitions = [datetime.combine(d, t) for i in start_time_lists]
+        transitions = (datetime.combine(d, t) for i in start_time_lists)
     for transition, start_time_list in zip(transitions, start_time_lists):
         new_start_time = start_time_list[1:]
         new_start_time.append(transition)
-        stoptime_lists.append(new_start_time)
-    return stoptime_lists
+        yield new_start_time
 
 
 def get_programmes_titles(main_selector, amount_channels):
-    return [
+    return (
         main_selector[i]
         .select("./div[@class='prname2' or @class='pastprname2']")
         .text_list() for i in amount_channels
-    ]
+    )
 
 
 def make_dict():
-    final_dict = []
     transitions = []
     for page in grab_pages():
         date_, main_selector, amount_channels = page
@@ -137,14 +129,13 @@ def make_dict():
         iterable = enumerate(zip(titles, start_time_lists, stop_time_lists), 1)
         for n, (i, j, k) in iterable:
             for a, b, c in zip(i, j, k):
-                final_dict.append({
+                yield {
                     "channel": str(n),
                     "start": b.strftime("%Y%m%d%H%M%S"),
                     "stop": c.strftime("%Y%m%d%H%M%S"),
                     "title": [(a, u"ru")]
-                })
-        transitions = [starttime[0] for starttime in start_time_lists]
-    return final_dict
+                }
+        transitions = (starttime[0] for starttime in start_time_lists)
 
 
 def write(file):
