@@ -1,10 +1,15 @@
 #!/usr/bin/env python
+import sys
 import xmltv
 import argparse
 from grab import Grab
+from functools import partial
+from urllib.parse import urljoin
 from datetime import datetime, date, time, timedelta
 
 
+BASE_URL = "http://www.vsetv.com/"
+EPG_URL = "schedule_package_personal_day_{}_nsc_1.html"
 MAPPING = {
     "f0": "0",
     "d9": "1",
@@ -12,34 +17,39 @@ MAPPING = {
 }
 
 
-def parse_args():
-    """Parse script parameters and return its values."""
-    parser = argparse.ArgumentParser(description="vsetv.com grabber.")
-    group = parser.add_mutually_exclusive_group()
-    parser.add_argument("-u", required=True, help="user")
-    parser.add_argument("-p", required=True, help="password")
-    group.add_argument("-o", default="tv_guide.xml", help="output file")
-    group.add_argument("--stdout", action="store_true", help="output to stdout")
-    args = parser.parse_args()
-    return args.u, args.p, args.o, args.stdout
+parser = argparse.ArgumentParser(description="vsetv.com grabber.")
+group = parser.add_mutually_exclusive_group()
+parser.add_argument("-u", "--user", required=True, help="user")
+parser.add_argument("-p", "--password", required=True, help="password")
+parser.add_argument("-d", "--days", type=int, default=1, help="number of days")
+group.add_argument("-o", "--output", default="tv_guide.xml", help="output file")
+group.add_argument("--stdout", action="store_true", help="output to stdout")
+args = parser.parse_args()
 
 
 g = Grab()
 g.setup(
-    post={"inlogin": parse_args()[0], "inpassword": parse_args()[1]},
+    post={"inlogin": args.user, "inpassword": args.password},
     timeout=60000
 )
-g.go("http://www.vsetv.com/login.php")
-g.go("http://www.vsetv.com/schedule_package_personal_day_{}_nsc_1.html".format(date.today()))
-main_selector = g.doc.select(".//div[@id=\"schedule_container\"]")
-amount_channels = range(len(main_selector))
+g.go(urljoin(BASE_URL, "login.php"))
+
+
+def grab_pages():
+    for day in reversed(range(args.days)):
+        date_ = date.today() + timedelta(days=day)
+        g.go(urljoin(BASE_URL, EPG_URL.format(date_)))
+        main_selector = g.doc.select(".//div[@id='schedule_container']")
+        amount_channels = range(len(main_selector))
+        yield date_, main_selector, amount_channels
 
 
 def get_channels_titles_dict():
+    g.go(urljoin(BASE_URL, EPG_URL.format(date.today())))
     return [
         {"display-name": [(elem, u"ru")], "id": str(i)}
         for i, elem in enumerate(
-            g.doc.select(".//td[@class=\"channeltitle\"]").text_list(), 1)
+            g.doc.select(".//td[@class='channeltitle']").text_list(), 1)
     ]
 
 
@@ -58,20 +68,20 @@ def deobfuscate_start_time(div):
     return start_time_string
 
 
-def get_starttime():
+def get_starttime(main_selector, amount_channels):
     return [
         list(map(
             deobfuscate_start_time,
             main_selector[i].select(
-                "./div[@class=\"time\" or @class=\"onair\" or @class=\"pasttime\"]"
+                "./div[@class='time' or @class='onair' or @class='pasttime']"
             ).selector_list
         )) for i in amount_channels
     ]
 
 
-def parse_start_time_string(start_time_string):
+def parse_start_time_string(start_time_string, date_=None):
     return datetime.combine(
-        date.today(),
+        date_,
         time(
             int(start_time_string.split(":")[0]),
             int(start_time_string.split(":")[1])
@@ -79,8 +89,11 @@ def parse_start_time_string(start_time_string):
     )
 
 
-def correct_starttime():
-    starttime_lists = [list(map(parse_start_time_string, p)) for p in get_starttime()]
+def correct_starttime(date_, main_selector, amount_channels):
+    starttime_lists = [
+        list(map(partial(parse_start_time_string, date_=date_), p))
+        for p in get_starttime(main_selector, amount_channels)
+    ]
     for starttime in starttime_lists:
         for i, this_date in enumerate(starttime, 1):
             try:
@@ -92,38 +105,45 @@ def correct_starttime():
     return starttime_lists
 
 
-def get_stoptime():
+def get_stoptime(date_, start_time_lists, transitions):
     stoptime_lists = []
-    t = time(5, 0)
-    d = date.today() + timedelta(days=1)
-    dt = datetime.combine(d, t)
-    for i in correct_starttime():
-        del i[0]
-        i.append(dt)
-        stoptime_lists.append(i)
+    if not transitions:
+        d = date_ + timedelta(days=1)
+        t = time(5, 0)
+        transitions = [datetime.combine(d, t) for i in start_time_lists]
+    for transition, start_time_list in zip(transitions, start_time_lists):
+        new_start_time = start_time_list[1:]
+        new_start_time.append(transition)
+        stoptime_lists.append(new_start_time)
     return stoptime_lists
 
 
-def get_programmes_titles():
+def get_programmes_titles(main_selector, amount_channels):
     return [
         main_selector[i]
-        .select("./div[@class=\"prname2\" or @class=\"pastprname2\"]")
+        .select("./div[@class='prname2' or @class='pastprname2']")
         .text_list() for i in amount_channels
     ]
 
 
 def make_dict():
     final_dict = []
-    for n, (i, j, k) in enumerate(zip(get_programmes_titles(),
-                                      correct_starttime(),
-                                      get_stoptime()), 1):
-        for a, b, c in zip(i, j, k):
-            final_dict.append({
-                "channel": str(n),
-                "start": b.strftime("%Y%m%d%H%M%S"),
-                "stop": c.strftime("%Y%m%d%H%M%S"),
-                "title": [(a, u"ru")]
-            })
+    transitions = []
+    for page in grab_pages():
+        date_, main_selector, amount_channels = page
+        titles = get_programmes_titles(main_selector, amount_channels)
+        start_time_lists = correct_starttime(date_, main_selector, amount_channels)
+        stop_time_lists = get_stoptime(date_, start_time_lists, transitions)
+        iterable = enumerate(zip(titles, start_time_lists, stop_time_lists), 1)
+        for n, (i, j, k) in iterable:
+            for a, b, c in zip(i, j, k):
+                final_dict.append({
+                    "channel": str(n),
+                    "start": b.strftime("%Y%m%d%H%M%S"),
+                    "stop": c.strftime("%Y%m%d%H%M%S"),
+                    "title": [(a, u"ru")]
+                })
+        transitions = [starttime[0] for starttime in start_time_lists]
     return final_dict
 
 
@@ -133,15 +153,11 @@ def write(file):
         w.addChannel(i)
     for i in make_dict():
         w.addProgramme(i)
-    w.write(file)
+    w.write(file, pretty_print=True)
 
 
 if __name__ == "__main__":
-    if parse_args()[3]:
-        import sys
-        if sys.version_info.major == 3:
-            write(sys.stdout.buffer)
-        elif sys.version_info.major == 2:
-            write(sys.stdout)
+    if args.stdout:
+        write(sys.stdout.buffer)
     else:
-        write(parse_args()[2])
+        write(args.output)
