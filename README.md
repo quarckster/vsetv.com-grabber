@@ -1,15 +1,16 @@
 vsetv.com-grabber
 =================
 
-##English
-A tv guide grabber from vsetv.com. Script grabs tv guide in xmltv for one day.
+## English
+A tv guide grabber from vsetv.com. This script grabs a tv guide in xmltv format for one or more days.
 
-##Dependecies
+## Dependecies
 * python3
 * Grab (http://grablib.org/)
 * xmltv (https://bitbucket.org/jfunk/python-xmltv)
+* transliterate
 
-##Usage
+## Usage
 You should have an account on vsetv.com if you want your own tv guide.
 The script created as cli utility. Available keys:
 
@@ -21,15 +22,16 @@ The script created as cli utility. Available keys:
 `--stdout`	  output to stdout
 
 
-##Русский
-Граббер сайта vsetv.com. Извлекает программу телепередач на один день в формате xmltv.
+## Русский
+Граббер сайта vsetv.com. Извлекает программу телепередач на один и более дней в формате xmltv.
 
-##Зависимости
+## Зависимости
 * python3
 * Grab (http://grablib.org/)
 * xmltv (https://bitbucket.org/jfunk/python-xmltv)
+* transliterate
 
-##Использование
+## Использование
 Необходимо иметь учётную запись на vsetv.com, чтобы составить свою программу передач.
 Скрипт работает как утилита командной строки. Ключи:
 

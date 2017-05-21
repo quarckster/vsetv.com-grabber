@@ -5,6 +5,7 @@ import argparse
 from grab import Grab
 from functools import partial
 from urllib.parse import urljoin
+from transliterate import translit
 from datetime import datetime, date, time, timedelta
 
 
@@ -33,6 +34,13 @@ g.setup(
     timeout=60000
 )
 g.go(urljoin(BASE_URL, "login.php"))
+g.go(urljoin(BASE_URL, EPG_URL.format(date.today())))
+channel_elems = g.doc.select(".//td[@class='channeltitle']").text_list()
+
+
+def translit_channel(channel_name):
+    channel_name = channel_name.lower().replace(" ", "_")
+    return translit(channel_name, "ru", reversed=True)
 
 
 def grab_pages():
@@ -47,9 +55,8 @@ def grab_pages():
 def get_channels_titles_dict():
     g.go(urljoin(BASE_URL, EPG_URL.format(date.today())))
     return (
-        {"display-name": [(elem, u"ru")], "id": str(i)}
-        for i, elem in enumerate(
-            g.doc.select(".//td[@class='channeltitle']").text_list(), 1)
+        {"display-name": [(elem, u"ru")], "id": translit_channel(elem)}
+        for elem in channel_elems
     )
 
 
@@ -126,11 +133,11 @@ def make_dict():
         titles = get_programmes_titles(main_selector, amount_channels)
         start_time_lists = correct_starttime(date_, main_selector, amount_channels)
         stop_time_lists = get_stoptime(date_, start_time_lists, transitions)
-        iterable = enumerate(zip(titles, start_time_lists, stop_time_lists), 1)
-        for n, (i, j, k) in iterable:
+        iterable = zip(titles, start_time_lists, stop_time_lists, channel_elems)
+        for i, j, k, channel_elem in iterable:
             for a, b, c in zip(i, j, k):
                 yield {
-                    "channel": str(n),
+                    "channel": translit_channel(channel_elem),
                     "start": b.strftime("%Y%m%d%H%M%S"),
                     "stop": c.strftime("%Y%m%d%H%M%S"),
                     "title": [(a, u"ru")]
