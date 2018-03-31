@@ -151,6 +151,9 @@ def write(file):
         w.addChannel(i)
     for i in make_dict():
         w.addProgramme(i)
+    els = w.root.getchildren()
+    new_els = sorted(els, key=lambda el: (el.get("channel", ""), el.get("id", ""), el.get("start", "")))
+    w.root[:] = new_els
     w.write(file, pretty_print=True)
 
 
