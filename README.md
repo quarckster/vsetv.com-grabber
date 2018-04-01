@@ -19,6 +19,7 @@ The script created as cli utility. Available keys:
 `-p`          vsetv.com password  
 `-o`          output file, if omitted the script saves result in tv_guide.xml  
 `-d`          number of days with EPG (one day by default)  
+`-z`          timezone offset in `+0000` format  
 `--stdout`	  output to stdout
 
 
@@ -40,4 +41,5 @@ The script created as cli utility. Available keys:
 `-p`          vsetv.com пароль  
 `-o`          выходной файл, если не указан, то скрипт сохраняет в файл с именем tv_guide.xml  
 `-d`          количество дней (значение по умолчанию один день)  
+`-z`          смещение часового пояса в формате `+0000`  
 `--stdout`	  итоговый xml отправить на стандартный вывод

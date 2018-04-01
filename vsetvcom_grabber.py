@@ -1,12 +1,12 @@
 #!/usr/bin/env python
+import argparse
 import sys
 import xmltv
-import argparse
+from datetime import datetime, date, time, timedelta, timezone
 from grab import Grab
 from functools import partial
-from urllib.parse import urljoin
 from transliterate import translit
-from datetime import datetime, date, time, timedelta
+from urllib.parse import urljoin
 
 
 BASE_URL = "http://www.vsetv.com/"
@@ -23,6 +23,7 @@ group = parser.add_mutually_exclusive_group()
 parser.add_argument("-u", "--user", required=True, help="user")
 parser.add_argument("-p", "--password", required=True, help="password")
 parser.add_argument("-d", "--days", type=int, default=1, help="number of days")
+parser.add_argument("-z", "--timezone", default=None, help="timezone")
 group.add_argument("-o", "--output", default="tv_guide.xml", help="output file")
 group.add_argument("--stdout", action="store_true", help="output to stdout")
 args = parser.parse_args()
@@ -128,6 +129,7 @@ def get_programmes_titles(main_selector, amount_channels):
 
 def make_dict():
     transitions = []
+    tz_part = "" if not args.timezone else " {}".format(args.timezone)
     for page in grab_pages():
         date_, main_selector, amount_channels = page
         titles = get_programmes_titles(main_selector, amount_channels)
@@ -138,8 +140,8 @@ def make_dict():
             for a, b, c in zip(i, j, k):
                 yield {
                     "channel": translit_channel(channel_elem),
-                    "start": b.strftime("%Y%m%d%H%M%S"),
-                    "stop": c.strftime("%Y%m%d%H%M%S"),
+                    "start": "{}{}".format(b.strftime("%Y%m%d%H%M%S"), tz_part),
+                    "stop": "{}{}".format(c.strftime("%Y%m%d%H%M%S"), tz_part),
                     "title": [(a, u"ru")]
                 }
         transitions = (starttime[0] for starttime in start_time_lists)
