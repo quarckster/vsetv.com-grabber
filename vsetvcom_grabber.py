@@ -56,8 +56,8 @@ def grab_pages():
 def get_channels_titles_dict():
     g.go(urljoin(BASE_URL, EPG_URL.format(date.today())))
     return (
-        {"display-name": [(elem, u"ru")], "id": translit_channel(elem)}
-        for elem in channel_elems
+        {"display-name": [(elem, u"ru")], "id": "{}_{}".format(translit_channel(elem), i)}
+        for i, elem in enumerate(channel_elems, 1)
     )
 
 
@@ -136,10 +136,10 @@ def make_dict():
         start_time_lists = correct_starttime(date_, main_selector, amount_channels)
         stop_time_lists = get_stoptime(date_, start_time_lists, transitions)
         iterable = zip(titles, start_time_lists, stop_time_lists, channel_elems)
-        for i, j, k, channel_elem in iterable:
+        for index, (i, j, k, channel_elem) in enumerate(iterable, 1):
             for a, b, c in zip(i, j, k):
                 yield {
-                    "channel": translit_channel(channel_elem),
+                    "channel": "{}_{}".format(translit_channel(channel_elem), index),
                     "start": "{}{}".format(b.strftime("%Y%m%d%H%M%S"), tz_part),
                     "stop": "{}{}".format(c.strftime("%Y%m%d%H%M%S"), tz_part),
                     "title": [(a, u"ru")]
